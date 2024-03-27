@@ -1,43 +1,37 @@
 #!/usr/bin/python3
 """
-This module contains a function that queries the Reddit API and prints
-the titles of the first 10 hot posts listed for a given subreddit.
+Script to print hot posts on a given Reddit subreddit.
 """
 
 import requests
-import sys
+
 
 def top_ten(subreddit):
-    # Construct the URL for the Reddit API
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit=10"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}  # Specify User-Agent header
+    """Print the titles of the 10 hottest posts on a given subreddit."""
+    # Construct the URL for the subreddit's hot posts in JSON format
+    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
 
-    # Make the GET request to Reddit API
-    response = requests.get(url, headers=headers, allow_redirects=False)
+    # Define headers for the HTTP request, including User-Agent
+    headers = {
+        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
+    }
 
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
-        data = response.json()
-        posts = data.get('data', {}).get('children', [])
+    # Define parameters for the request, limiting the number of posts to 10
+    params = {
+        "limit": 10
+    }
 
-        # Check if there are any posts
-        if not posts:
-            print("No posts found.")
-        else:
-            # Print the titles of the first 10 posts
-            for post in posts:
-                print(post['data']['title'])
-    else:
-        # Print None for invalid subreddits or other errors
+    # Send a GET request to the subreddit's hot posts page
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
+
+    # Check if the response status code indicates a not-found error (404)
+    if response.status_code == 404:
         print("None")
+        return
 
-# Example usage when the script is run directly
-if __name__ == "__main__":
-    import sys
+    # Parse the JSON response and extract the 'data' section
+    results = response.json().get("data")
 
-    # Check if a subreddit argument is provided
-    if len(sys.argv) < 2:
-        print("Please pass an argument for the subreddit to search.")
-    else:
-        # Call the top_ten function with the provided subreddit
-        top_ten(sys.argv[1])
+    # Print the titles of the top 10 hottest posts
+    [print(c.get("data").get("title")) for c in results.get("children")]
